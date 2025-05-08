@@ -1,5 +1,3 @@
-pip install urllib3 six
-
 from telegram.ext import Updater, CommandHandler
 from dotenv import load_dotenv
 import os
