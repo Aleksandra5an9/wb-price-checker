@@ -1,26 +1,35 @@
-import requests
+from telegram.ext import Updater, CommandHandler
+from dotenv import load_dotenv
+import os
 
-WB_IDS = ["260800583", "260897865"]
+from parser import get_price  # импортируй свою функцию
 
-def get_price(wb_id):
-    url = f"https://search.wb.ru/exactmatch/ru/common/v4/search?query={wb_id}&resultset=catalog&dest=-1257786&spp=0"
-    response = requests.get(url)
-    print(f"\nОтвет от поиска для {wb_id}: {response.status_code}")
+load_dotenv()
 
-    try:
-        data = response.json()
-        products = data.get("data", {}).get("products", [])
-        if not products:
-            print(f"Товар {wb_id} не найден.")
-            return None
-        product = products[0]
-        name = product.get("name")
-        price = product.get("salePriceU", 0) // 100
-        print(f"Найдено: {name}, цена: {price} ₽")
-        return price
-    except Exception as e:
-        print(f"Ошибка при обработке данных для {wb_id}: {e}")
-        return None
+def start(update, context):
+    update.message.reply_text('Привет! Введи артикул WB.')
 
-for wb_id in WB_IDS:
-    get_price(wb_id)
+def check_price(update, context):
+    if not context.args:
+        update.message.reply_text("Укажи артикул Wildberries.")
+        return
+    wb_id = context.args[0]
+    price = get_price(wb_id)
+    if price:
+        update.message.reply_text(f"Цена товара {wb_id}: {price} ₽")
+    else:
+        update.message.reply_text(f"Товар {wb_id} не найден.")
+
+def main():
+    token = os.getenv("TELEGRAM_TOKEN")
+    updater = Updater(token, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("check", check_price))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
