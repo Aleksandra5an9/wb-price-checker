@@ -3,7 +3,7 @@ import requests
 WB_IDS = ["260800583", "260897865"]
 
 def get_price(wb_id):
-    url = f"https://search.wb.ru/exactmatch/ru/common/v4/search?query={wb_id}&resultset=catalog"
+    url = f"https://search.wb.ru/exactmatch/ru/common/v4/search?query={wb_id}&resultset=catalog&dest=-1257786&spp=0"
     response = requests.get(url)
     print(f"\nОтвет от поиска для {wb_id}: {response.status_code}")
 
