@@ -1,8 +1,39 @@
 import requests
-import time
-
-from dotenv import load_dotenv
 import os
+import time
+from dotenv import load_dotenv
+
+# Загрузка переменных из .env файла
+load_dotenv()
+
+# API ключ
+WB_API_KEY = os.getenv("WB_API_KEY")
+
+# URL для проверки подключения
+url = "https://content-api.wildberries.ru/ping"
+
+# Заголовки (если требуется токен или ключ)
+headers = {
+    "Authorization": f"Bearer {WB_API_KEY}"  # Используйте ваш реальный API ключ
+}
+
+# Отправляем запрос
+response = requests.get(url, headers=headers)
+
+# Проверка результата
+if response.status_code == 200:
+    print("Подключение успешно!")
+else:
+    print(f"Ошибка: {response.status_code}")
+    try:
+        error_details = response.json()
+        print("Подробности ошибки:", error_details)
+    except ValueError:
+        print("Не удалось распарсить ответ, возможно, не в формате JSON")
+        print("Ответ:", response.text)
+
+# Далее, ваш основной код
+# Например, можно продолжить выполнение скрипта для получения цен
 
 load_dotenv()
 
