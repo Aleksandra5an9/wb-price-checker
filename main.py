@@ -1,35 +1,36 @@
-from telegram.ext import Updater, CommandHandler
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-from parser import get_price  # импортируй свою функцию
+from parser import get_price  # твоя функция парсинга
 
 load_dotenv()
 
-def start(update, context):
-    update.message.reply_text('Привет! Введи артикул WB.')
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Привет! Введи артикул WB.')
 
-def check_price(update, context):
+async def check_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        update.message.reply_text("Укажи артикул Wildberries.")
+        await update.message.reply_text("Укажи артикул Wildberries.")
         return
+
     wb_id = context.args[0]
     price = get_price(wb_id)
+
     if price:
-        update.message.reply_text(f"Цена товара {wb_id}: {price} ₽")
+        await update.message.reply_text(f"Цена товара {wb_id}: {price} ₽")
     else:
-        update.message.reply_text(f"Товар {wb_id} не найден.")
+        await update.message.reply_text(f"Товар {wb_id} не найден.")
 
 def main():
     token = os.getenv("TELEGRAM_TOKEN")
-    updater = Updater(token, use_context=True)
-    dp = updater.dispatcher
+    application = Application.builder().token(token).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("check", check_price))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("check", check_price))
 
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
