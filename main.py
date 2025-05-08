@@ -2,42 +2,44 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Загрузка переменных из .env файла
+# Загрузка переменных из .env
 load_dotenv()
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# API ключ
-WB_API_KEY = os.getenv("WB_API_KEY")
+# Артикулы товаров
+WB_IDS = ["260800583", "260897865"]  # Можно добавить свои
 
-# Список артикулов товаров
-WB_IDS = ["260800583", "260897865"]
-
-def get_price(wb_id):
-    url = f"https://card.wb.ru/cards/detail?appType=1&curr=rub&nm={wb_id}"
-    r = requests.get(url)
-    
-    # Логируем ответ от API
-    print(f"Статус ответа для {wb_id}: {r.status_code}")
-    print(f"Ответ от API для {wb_id}: {r.text}")  # Печатаем полный ответ от API для отладки
-
+def get_price_via_search(wb_id):
+    url = f"https://search.wb.ru/exactmatch/ru/common/v4/search?query={wb_id}&resultset=catalog"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    response = requests.get(url, headers=headers)
+    print(f"Ответ от поиска для {wb_id}: {response.status_code}")
     try:
-        response_data = r.json()
-        # Логируем структуру данных, чтобы понять, как искать цену
-        print(f"Данные от API для {wb_id}: {response_data}")
-        
-        # Пытаемся извлечь цену
-        price = response_data["data"]["products"][0]["priceU"] // 100
-        return price
-    except Exception as e:
-        print(f"Ошибка при обработке данных для {wb_id}: {e}")
-        return None
+        data = response.json()
+        product = data["data"]["products"][0]
+        price = product["salePriceU"] // 100  # Цена со скидкой
+        name = product["name"]
+        print(f"Найдено: {name}, цена: {price} ₽")
+        return f"{name}: {price} ₽"
+    except (KeyError, IndexError) as e:
+        print(f"Не удалось получить цену для {wb_id}: {e}")
+        return f"{wb_id}: не найден"
+
+def send_message(text):
+    requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", params={
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text
+    })
 
 def main():
+    message = "📦 Цены товаров на WB:\n"
     for wb_id in WB_IDS:
-        price = get_price(wb_id)
-        if price:
-            print(f"Цена для товара {wb_id}: {price} ₽")
-        else:
-            print(f"Товар {wb_id}: не найден")
+        result = get_price_via_search(wb_id)
+        message += f"- {result}\n"
+    send_message(message)
 
 if __name__ == "__main__":
     main()
