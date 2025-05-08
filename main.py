@@ -22,8 +22,8 @@ def get_price(wb_id):
         return None
 
 def send_message(text):
-    requests.get(f"https://api.telegram.org/bot{TOKEN}/sendMessage", params={
-        "chat_id": CHAT_ID,
+    requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", params={
+        "chat_id": TELEGRAM_CHAT_ID,
         "text": text
     })
 
