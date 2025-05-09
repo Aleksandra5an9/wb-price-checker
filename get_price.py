@@ -1,4 +1,9 @@
+import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()  # Загружаем переменные из .env файла
+API_KEY = os.getenv("API_KEY")
 
 def get_wb_price(nm_id):
     url = f"https://card.wb.ru/cards/v1/detail?appType=1&curr=rub&nm={nm_id}"
@@ -23,6 +28,6 @@ def get_wb_price(nm_id):
         return None
 
 if __name__ == "__main__":
-    nm_id = 14922440
+    nm_id = 260800583
     result = get_wb_price(nm_id)
     print(result)
