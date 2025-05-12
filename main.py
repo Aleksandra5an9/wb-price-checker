@@ -2,8 +2,8 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()  # Загружаем переменные из .env файла
-API_KEY = os.getenv("API_KEY")
+load_dotenv()  # Загружаем переменные из .env
+API_KEY = os.getenv("API_KEY")  # Используется, если нужен Telegram
 
 def get_wb_price(nm_id):
     url = f"https://card.wb.ru/cards/v1/detail?appType=1&curr=rub&nm={nm_id}"
