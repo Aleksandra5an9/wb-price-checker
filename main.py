@@ -9,13 +9,12 @@ def get_wb_price(nm_id):
     url = f"https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
     
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "HeaderApiKey": API_KEY
+        "Authorization": f"Bearer {API_KEY}",  # используем только этот заголовок
     }
 
     params = {
         "limit": 10,
-        "filterNmID": nm_id
+        "filterNmID": nm_id  # Артикул товара, который нужно проверить
     }
     
     try:
@@ -33,7 +32,7 @@ def get_wb_price(nm_id):
         return None
 
 if __name__ == "__main__":
-    nm_id = 44589768676  # Пример ID товара
+    nm_id = 260800583  # Пример ID товара
     result = get_wb_price(nm_id)
     if result:
         print(result)
