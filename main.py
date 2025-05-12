@@ -1,49 +1,57 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-def get_real_price(nmID):
-    # Правильный URL
-    url = f'https://card.wb.ru/cards/detail?nm={nmID}'
+load_dotenv()  # Загружаем переменные из .env
+API_KEY = os.getenv("API_KEY")  # Получаем API ключ
+
+def get_wb_price(nm_id):
+    url = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
     
-    # Заголовки для имитации запроса с браузера
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
+        "Authorization": f"Bearer {API_KEY}",  # используем только этот заголовок
     }
 
-    # Выполнение запроса с дополнительными заголовками
-    response = requests.get(url, headers=headers)
-
-    if response.status_code != 200:
-        print(f"Ошибка при запросе: {response.status_code}")
-        return
-
+    params = {
+        "limit": 10,
+        "filterNmID": nm_id  # Артикул товара, который нужно проверить
+    }
+    
     try:
-        # Пытаемся распарсить ответ
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()  # Поднимет исключение для ошибок HTTP
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при запросе: {e}")
+        return None
+    
+    if response.status_code == 200:
         data = response.json()
-        products = data.get('data', {}).get('products', [])
+        
+        # Выведем информацию о товаре
+        if "data" in data and "listGoods" in data["data"]:
+            product = data["data"]["listGoods"][0]
+            print(f"Артикул: {product['nmID']}")
+            print(f"Код товара: {product['vendorCode']}")
+            print(f"Размеры: {', '.join([size['techSizeName'] for size in product['sizes']])}")
+            
+            for size in product["sizes"]:
+                print(f"Размер: {size['techSizeName']}")
+                print(f"Цена: {size['price'] / 100} ₽")
+                print(f"Цена со скидкой: {size['discountedPrice'] / 100} ₽")
+                print(f"Цена для WB Клуба: {size['clubDiscountedPrice'] / 100} ₽")
+                print("-" * 50)
+            
+            # Печать дополнительной информации о скидке
+            print(f"Общая скидка: {product['discount']}%")
+            print(f"Скидка для WB Клуба: {product['clubDiscount']}%")
+        
+        return data
+    else:
+        print(f"Ошибка {response.status_code}: {response.text}")
+        return None
 
-        if not products:
-            print(f"Товар с nmID {nmID} не найден на сайте.")
-            return
-
-        # Извлечение данных товара
-        product = products[0]
-        price = product['priceU'] / 100
-        sale_price = product['salePriceU'] / 100
-        discount = product.get('discount', round((1 - sale_price / price) * 100))
-
-        # Выводим информацию о товаре
-        print(f"Арт: {nmID}")
-        print(f"Цена без скидки: {price:.2f} ₽")
-        print(f"Цена со скидкой: {sale_price:.2f} ₽")
-        print(f"Итоговая скидка: {discount}%")
-    except Exception as e:
-        print("Ошибка обработки данных:", e)
-
-# Пример использования
-get_real_price(260800583)
+if __name__ == "__main__":
+    nm_id = 260800583  
+    result = get_wb_price(nm_id)
+    if result:
+        print(result)
