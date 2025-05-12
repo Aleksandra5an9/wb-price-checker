@@ -8,10 +8,15 @@ def get_real_price(nmID):
         print(f"Ошибка при запросе: {response.status_code}")
         return
 
-    data = response.json()
-
     try:
-        product = data['data']['products'][0]
+        data = response.json()
+        # Проверяем, что список products не пуст
+        products = data['data']['products']
+        if not products:
+            print("Продукты не найдены.")
+            return
+        
+        product = products[0]
         price = product['priceU'] / 100
         sale_price = product['salePriceU'] / 100
         discount = product.get('discount', round((1 - sale_price / price) * 100))
@@ -20,7 +25,7 @@ def get_real_price(nmID):
         print(f"Цена без скидки: {price:.2f} ₽")
         print(f"Цена со скидкой: {sale_price:.2f} ₽")
         print(f"Итоговая скидка: {discount}%")
-    except (IndexError, KeyError) as e:
+    except (KeyError, ValueError) as e:
         print("Ошибка в структуре данных:", e)
 
 # Пример использования
