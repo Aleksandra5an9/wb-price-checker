@@ -4,7 +4,12 @@ from dotenv import load_dotenv
 
 # Загружаем переменные из .env
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")  # API ключ
+
+# Проверка на существование ключа
+if not API_KEY:
+    print("API_KEY не найден в .env файле.")
+    exit()
 
 def get_product_details(nm_id):
     url = f"https://discounts-prices-api.wildberries.ru/api/v2/list/goods/detail"
@@ -27,6 +32,7 @@ def get_product_details(nm_id):
             print("Нет данных о товаре.")
     else:
         print(f"Ошибка при запросе: {response.status_code}")
+        print(f"Ответ от сервера: {response.text}")
     return None
 
 if __name__ == "__main__":
