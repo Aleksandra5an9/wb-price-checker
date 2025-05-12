@@ -14,6 +14,8 @@ def get_wb_price(nm_id):
 
     data = response.json()
     try:
+        print(data)
+
         product = data['data']['products'][0]
         price = product['priceU'] / 100
         sale_price = product['salePriceU'] / 100
