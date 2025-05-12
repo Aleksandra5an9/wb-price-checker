@@ -1,48 +1,39 @@
-import requests
 import os
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()  # Загружаем переменные из .env
-API_KEY = os.getenv("API_KEY")  # Используем API ключ, если нужно
+API_KEY = os.getenv("API_KEY")  # Получаем API ключ
 
-# Функция для получения товаров с ценами
-def get_wb_products(limit=1000, offset=0, filter_nm_id=None):
-    url = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
+def get_wb_price(nm_id):
+    url = f"https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
     
     headers = {
-        'HeaderApiKey': API_KEY  # Ваш API ключ для авторизации
+        "Authorization": f"Bearer {API_KEY}",
+        "HeaderApiKey": API_KEY
     }
-    
+
     params = {
-        'limit': limit,
-        'offset': offset,
-        'filterNmID': filter_nm_id  # Используется, если нужно искать по артикулу
+        "limit": 10,
+        "filterNmID": nm_id
     }
     
-    response = requests.get(url, headers=headers, params=params)
-    
-    if response.status_code != 200:
-        print(f"Ошибка: {response.status_code}")
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()  # Поднимет исключение для ошибок HTTP
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при запросе: {e}")
         return None
     
-    data = response.json()
-    
-    if not data.get('data', {}).get('products', []):
-        print("Товары не найдены или достигнут конец списка.")
+    if response.status_code == 200:
+        data = response.json()
+        return data
+    else:
+        print(f"Ошибка {response.status_code}: {response.text}")
         return None
-    
-    products = data['data']['products']
-    return products
 
-# Пример использования функции
 if __name__ == "__main__":
-    # Параметры запроса (например, ищем товары с артикулом или без)
-    limit = 1000  # Максимум товаров на одной странице
-    offset = 0  # Смещение, начинаем с первого товара
-    filter_nm_id = None  # Здесь можно указать артикул товара для фильтрации
-
-    products = get_wb_products(limit=limit, offset=offset, filter_nm_id=filter_nm_id)
-    
-    if products:
-        for product in products:
-            print(f"Название: {product['name']}, Цена: {product['price']}, Скидка: {product.get('salePrice', 'Нет скидки')}")
+    nm_id = 44589768676  # Пример ID товара
+    result = get_wb_price(nm_id)
+    if result:
+        print(result)
