@@ -6,7 +6,7 @@ def get_product_info(nm_id):
     
     if response.status_code == 200:
         data = response.json()
-        print(data)  # Здесь вы можете обработать данные по вашему усмотрению
+        print(data)  # Здесь вы можете обработать данные по вашему усмотрен
     else:
         print(f"Ошибка: {response.status_code}")
 
