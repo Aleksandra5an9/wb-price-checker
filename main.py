@@ -1,14 +1,26 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import time
 
-def get_product_info(nm_id):
-    url = f"https://card.wb.ru/cards/v2/detail?appType=1&curr=rub&dest=-1255987&spp=30&ab_testing=false&nm={nm_id}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        print(data)  # Здесь вы можете обработать данные по вашему усмотрен
-    else:
-        print(f"Ошибка: {response.status_code}")
+url = 'https://www.wildberries.ru/catalog/260800583/detail.aspx'
 
-# Пример использования
-get_product_info(260800583)
+# Настройки для headless-браузера
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+options.add_argument('--window-size=1920,1080')
+
+driver = webdriver.Chrome(options=options)
+driver.get(url)
+
+# Ждём, чтобы страница успела прогрузиться
+time.sleep(5)
+
+# Ищем цену
+try:
+    price_element = driver.find_element('css selector', 'span.price-block__price')
+    print('Цена с сайта:', price_element.text)
+except:
+    print('Не удалось найти цену.')
+
+driver.quit()
