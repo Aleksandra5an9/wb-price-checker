@@ -54,6 +54,7 @@ def format_message(products):
             first_size = sizes[0]
             if first_size and first_size.get('discountedPrice') is not None:
                 discounted_price = first_size['discountedPrice']
+        # Экранируем vendorCode, остальные части — числа и символы, не требующие экранирования
         line = f"*VendorCode:* `{escape_markdown(str(vendor_code))}`, *DiscountedPrice:* {discounted_price} RUB"
         lines.append(line)
     return "\n".join(lines)
@@ -61,7 +62,6 @@ def format_message(products):
 async def send_telegram_message(text):
     try:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        # Для python-telegram-bot v20+ рекомендуется использовать async with
         async with bot:
             await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
         logging.info("Сообщение успешно отправлено")
