@@ -2,10 +2,18 @@ import os
 import requests
 import telegram
 
-API_KEY_WB = os.getenv("API_KEY")  # Твой токен для авторизации
-URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
+API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+if not API_KEY_WB:
+    raise ValueError("API_KEY не задана в переменных окружения")
+if not TELEGRAM_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN не задан")
+if not CHAT_ID:
+    raise ValueError("TELEGRAM_CHAT_ID не задан")
+
+URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
 
 HEADERS = {
     "Authorization": f"Bearer {API_KEY_WB}"
@@ -21,21 +29,29 @@ def fetch_products():
     print(f"Полученные данные: {data}")
     return data
 
+def escape_markdown(text: str) -> str:
+    """
+    Экранирует специальные символы для Telegram MarkdownV2
+    """
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
+
 def format_message(products):
     lines = []
     for product in products:
         vendor_code = product.get('vendorCode', 'N/A')
         sizes = product.get('sizes', [])
-        if sizes:
-            discounted_price = sizes[0].get('discountedPrice', 'N/A')
-            lines.append(f"VendorCode: {vendor_code}, DiscountedPrice: {discounted_price} RUB")
+        if sizes and sizes[0].get('discountedPrice') is not None:
+            discounted_price = sizes[0]['discountedPrice']
+            line = f"*VendorCode:* `{escape_markdown(vendor_code)}`, *DiscountedPrice:* {discounted_price} RUB"
         else:
-            lines.append(f"VendorCode: {vendor_code}, DiscountedPrice: N/A")
+            line = f"*VendorCode:* `{escape_markdown(vendor_code)}`, *DiscountedPrice:* N/A"
+        lines.append(line)
     return "\n".join(lines)
 
 def send_telegram_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=CHAT_ID, text=text)
+    bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
 
 def main():
     try:
