@@ -23,9 +23,9 @@ PRODUCT_IDS = [
 
 def get_prices(product_ids):
     url = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
-    headers = {
-        "X-API-KEY": API_KEY_WB
-    }
+   headers = {
+    "Authorization": f"Bearer {API_KEY_WB}"
+}
     prices_info = []
 
     for nm_id in product_ids:
