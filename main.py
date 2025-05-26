@@ -36,11 +36,11 @@ def fetch_products(limit=10, offset=0):
 
 def escape_markdown(text: str) -> str:
     """
-    Экранирует все специальные символы для Telegram MarkdownV2, включая обратный слэш.
+    Экранирует все специальные символы для Telegram MarkdownV2.
     """
     if not text:
         return ""
-    escape_chars = r'_*[]()~`>#+-=|{}.!,:\\'
+    escape_chars = r'\_*[]()~`>#+-=|{}.!,:'
     return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
 
 def format_message(products):
@@ -53,8 +53,8 @@ def format_message(products):
             first_size = sizes[0]
             if first_size and first_size.get('discountedPrice') is not None:
                 discounted_price = first_size['discountedPrice']
-        # Экранируем только vendorCode (строка) и discounted_price (число в строке) для безопасности
-        line = f"{escape_markdown(str(vendor_code))} - {escape_markdown(str(discounted_price))} RUB"
+        # Формируем строку целиком, затем экранируем
+        line = escape_markdown(f"{vendor_code} - {discounted_price} RUB")
         lines.append(line)
     return "\n".join(lines)
 
