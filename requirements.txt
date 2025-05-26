@@ -2,3 +2,4 @@ requests
 python-dotenv
 pyTelegramBotAPI
 selenium
+python-telegram-bot
