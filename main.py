@@ -53,8 +53,8 @@ def format_message(products):
             first_size = sizes[0]
             if first_size and first_size.get('discountedPrice') is not None:
                 discounted_price = first_size['discountedPrice']
-        # Экранируем и vendorCode и discountedPrice, чтобы избежать ошибок MarkdownV2
-        line = f"*VendorCode:* `{escape_markdown(str(vendor_code))}`, *DiscountedPrice:* {escape_markdown(str(discounted_price))} RUB"
+        # Экранируем только vendorCode (строка) и discounted_price (число в строке) для безопасности
+        line = f"{escape_markdown(str(vendor_code))} - {escape_markdown(str(discounted_price))} RUB"
         lines.append(line)
     return "\n".join(lines)
 
