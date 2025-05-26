@@ -1,9 +1,9 @@
 import requests
 
 # === ТВОИ ДАННЫЕ ===
-WB_TOKEN = "ТВОЙ_WB_TOKEN"
-TELEGRAM_BOT_TOKEN = "ТВОЙ_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID = "ТВОЙ_CHAT_ID"
+WB_TOKEN = "API_KEY"
+TELEGRAM_BOT_TOKEN = "TELEGRAM_BOT_TOKEN"
+TELEGRAM_CHAT_ID = "TELEGRAM_CHAT_ID"
 
 # Артикулы WB
 nm_ids = [
