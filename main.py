@@ -1,26 +1,57 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import time
+import os
+import requests
+from dotenv import load_dotenv
 
-url = 'https://www.wildberries.ru/catalog/260800583/detail.aspx'
+load_dotenv()  # Загружаем переменные из .env
+API_KEY = os.getenv("API_KEY")  # Получаем API ключ
 
-# Настройки для headless-браузера
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--disable-gpu')
-options.add_argument('--window-size=1920,1080')
+def get_wb_price(nm_id):
+    url = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
+    
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",  # используем только этот заголовок
+    }
 
-driver = webdriver.Chrome(options=options)
-driver.get(url)
+    params = {
+        "limit": 10,
+        "filterNmID": nm_id  # Артикул товара, который нужно проверить
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()  # Поднимет исключение для ошибок HTTP
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при запросе: {e}")
+        return None
+    
+    if response.status_code == 200:
+        data = response.json()
+        
+        # Выведем информацию о товаре
+        if "data" in data and "listGoods" in data["data"]:
+            product = data["data"]["listGoods"][0]
+            print(f"Артикул: {product['nmID']}")
+            print(f"Код товара: {product['vendorCode']}")
+            print(f"Размеры: {', '.join([size['techSizeName'] for size in product['sizes']])}")
+            
+            for size in product["sizes"]:
+                print(f"Размер: {size['techSizeName']}")
+                print(f"Цена: {size['price'] / 100} ₽")
+                print(f"Цена со скидкой: {size['discountedPrice'] / 100} ₽")
+                print(f"Цена для WB Клуба: {size['clubDiscountedPrice'] / 100} ₽")
+                print("-" * 50)
+            
+            # Печать дополнительной информации о скидке
+            print(f"Общая скидка: {product['discount']}%")
+            print(f"Скидка для WB Клуба: {product['clubDiscount']}%")
+        
+        return data
+    else:
+        print(f"Ошибка {response.status_code}: {response.text}")
+        return None
 
-# Ждём, чтобы страница успела прогрузиться
-time.sleep(5)
-
-# Ищем цену
-try:
-    price_element = driver.find_element('css selector', 'span.price-block__price')
-    print('Цена с сайта:', price_element.text)
-except:
-    print('Не удалось найти цену.')
-
-driver.quit()
+if __name__ == "__main__":
+    nm_id = 260800583  
+    result = get_wb_price(nm_id)
+    if result:
+        print(result)
