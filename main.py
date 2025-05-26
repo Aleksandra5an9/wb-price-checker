@@ -1,6 +1,7 @@
 import os
 import requests
 import telegram
+import asyncio
 
 API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -49,11 +50,11 @@ def format_message(products):
         lines.append(line)
     return "\n".join(lines)
 
-def send_telegram_message(text):
+async def send_telegram_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
 
-def main():
+async def main():
     try:
         data = fetch_products()
         goods = data.get('data', {}).get('listGoods', [])
@@ -62,10 +63,11 @@ def main():
             return
         message = format_message(goods)
         print(f"Формируем сообщение для Telegram:\n{message}")
-        send_telegram_message(message)
+        await send_telegram_message(message)
         print("Сообщение отправлено")
     except Exception as e:
         print(f"Произошла ошибка: {e}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
+
