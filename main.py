@@ -2,6 +2,9 @@ import os
 import requests
 import telegram
 import asyncio
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -15,25 +18,26 @@ if not CHAT_ID:
     raise ValueError("TELEGRAM_CHAT_ID не задан")
 
 URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
-
 HEADERS = {
     "Authorization": f"Bearer {API_KEY_WB}"
 }
 
 def fetch_products():
     params = {'limit': 10, 'offset': 0}
-    print(f"Запрос к API: {URL} с параметрами {params}")
+    logging.info(f"Запрос к API: {URL} с параметрами {params}")
     response = requests.get(URL, headers=HEADERS, params=params)
-    print(f"Ответ API: статус {response.status_code}")
+    logging.info(f"Ответ API: статус {response.status_code}")
     response.raise_for_status()
     data = response.json()
-    print(f"Полученные данные: {data}")
+    logging.info(f"Полученные данные: {data}")
     return data
 
 def escape_markdown(text: str) -> str:
     """
     Экранирует специальные символы для Telegram MarkdownV2
     """
+    if not text:
+        return ""
     escape_chars = r'\_*[]()~`>#+-=|{}.!'
     return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
 
@@ -42,32 +46,38 @@ def format_message(products):
     for product in products:
         vendor_code = product.get('vendorCode', 'N/A')
         sizes = product.get('sizes', [])
-        if sizes and sizes[0].get('discountedPrice') is not None:
-            discounted_price = sizes[0]['discountedPrice']
-            line = f"*VendorCode:* `{escape_markdown(vendor_code)}`, *DiscountedPrice:* {discounted_price} RUB"
-        else:
-            line = f"*VendorCode:* `{escape_markdown(vendor_code)}`, *DiscountedPrice:* N/A"
+        discounted_price = "N/A"
+        if sizes:
+            first_size = sizes[0]
+            if first_size and first_size.get('discountedPrice') is not None:
+                discounted_price = first_size['discountedPrice']
+        line = f"*VendorCode:* `{escape_markdown(str(vendor_code))}`, *DiscountedPrice:* {discounted_price} RUB"
         lines.append(line)
     return "\n".join(lines)
 
 async def send_telegram_message(text):
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        # Для python-telegram-bot v20+ рекомендуется использовать async with
+        async with bot:
+            await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
+        logging.info("Сообщение успешно отправлено")
+    except telegram.error.TelegramError as e:
+        logging.error(f"Ошибка при отправке сообщения в Telegram: {e}")
+        raise
 
 async def main():
     try:
         data = fetch_products()
         goods = data.get('data', {}).get('listGoods', [])
         if not goods:
-            print("Нет данных о товарах")
+            logging.warning("Нет данных о товарах для отправки")
             return
         message = format_message(goods)
-        print(f"Формируем сообщение для Telegram:\n{message}")
+        logging.info(f"Формируем сообщение для Telegram:\n{message}")
         await send_telegram_message(message)
-        print("Сообщение отправлено")
     except Exception as e:
-        print(f"Произошла ошибка: {e}")
+        logging.error(f"Произошла ошибка: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
-
