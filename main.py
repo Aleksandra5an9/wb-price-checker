@@ -1,4 +1,6 @@
+import os
 import requests
+
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # Задай в Railway как переменную окружения
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") 
