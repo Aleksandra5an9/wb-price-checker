@@ -36,11 +36,11 @@ def fetch_products(limit=10, offset=0):
 
 def escape_markdown(text: str) -> str:
     """
-    Экранирует все специальные символы для Telegram MarkdownV2.
+    Экранирует все специальные символы для Telegram MarkdownV2, включая обратный слэш.
     """
     if not text:
         return ""
-    escape_chars = r'_*[]()~`>#+-=|{}.!,:'
+    escape_chars = r'_*[]()~`>#+-=|{}.!,:\\'
     return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
 
 def format_message(products):
