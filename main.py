@@ -56,6 +56,19 @@ def send_telegram_message(text):
     response = requests.post(url, data=payload)
     return response.status_code == 200
 
+def send_telegram_message(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text,
+        # "parse_mode": "HTML"  # временно отключи
+    }
+    response = requests.post(url, data=payload)
+    if response.status_code != 200:
+        print("Ошибка Telegram:", response.status_code, response.text)
+        return False
+    return True
+
 def main():
     prices = get_prices(PRODUCT_IDS)
     message = "\n".join(prices)
