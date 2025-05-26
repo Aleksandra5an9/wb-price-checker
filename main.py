@@ -5,12 +5,13 @@ import asyncio
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logging.info(f"TELEGRAM_TOKEN: {TELEGRAM_TOKEN[:5]}...")  # первые 5 символов для безопасности
-logging.info(f"CHAT_ID: {CHAT_ID}")
 
 API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+logging.info(f"TELEGRAM_TOKEN: {TELEGRAM_TOKEN[:5]}...")  # первые 5 символов для безопасности
+logging.info(f"CHAT_ID: {CHAT_ID}")
 
 if not API_KEY_WB:
     raise ValueError("API_KEY не задана в переменных окружения")
