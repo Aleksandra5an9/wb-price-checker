@@ -1,7 +1,7 @@
 import requests
 
-TELEGRAM_BOT_TOKEN = "ТВОЙ_ТОКЕН"
-TELEGRAM_CHAT_ID = "ТВОЙ_CHAT_ID"  # строка или число
+TELEGRAM_BOT_TOKEN = "TELEGRAM_BOT_TOKEN"
+TELEGRAM_CHAT_ID = "ТTELEGRAM_CHAT_ID"  # строка или число
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
