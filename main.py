@@ -2,7 +2,7 @@ import os
 import requests
 import telegram
 
-API_URL = os.getenv("API_KEY")  # замени на реальный URL
+API_URL = os.getenv("API_KEY")  # Твой реальный URL API
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
