@@ -51,7 +51,7 @@ def format_message(products):
 
 def send_telegram_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
+    await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
 
 def main():
     try:
