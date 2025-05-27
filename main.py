@@ -24,7 +24,7 @@ HEADERS = {
     "Authorization": f"Bearer {API_KEY_WB}"
 }
 
-def fetch_products(limit=10, offset=0):
+def fetch_products(limit=20, offset=0):
     params = {'limit': limit, 'offset': offset}
     logging.info(f"Запрос к API: {URL} с параметрами {params}")
     response = requests.get(URL, headers=HEADERS, params=params)
