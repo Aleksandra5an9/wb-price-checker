@@ -3,3 +3,4 @@ python-dotenv
 pyTelegramBotAPI
 selenium
 python-telegram-bot
+Flask
