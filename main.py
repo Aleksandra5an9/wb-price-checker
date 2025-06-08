@@ -6,12 +6,10 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
-# Получаем переменные окружения
 API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_IDS = os.getenv("TELEGRAM_CHAT_IDS", "").split(",")
 
-# Проверка переменных окружения
 if not API_KEY_WB:
     raise ValueError("API_KEY не задана в переменных окружения")
 if not TELEGRAM_TOKEN:
@@ -35,9 +33,6 @@ def fetch_products(limit=20, offset=0):
     return data
 
 def escape_markdown(text: str) -> str:
-    """
-    Экранирует все специальные символы для Telegram MarkdownV2.
-    """
     if not text:
         return ""
     escape_chars = r'\_*[]()~`>#+-=|{}.!,:'
@@ -53,7 +48,6 @@ def format_message(products):
             first_size = sizes[0]
             if first_size and first_size.get('discountedPrice') is not None:
                 discounted_price = first_size['discountedPrice']
-        # Формируем строку целиком, затем экранируем
         line = escape_markdown(f"{vendor_code} - {discounted_price} RUB")
         lines.append(line)
     return "\n".join(lines)
@@ -69,7 +63,7 @@ async def send_telegram_message(text):
         logging.error(f"Ошибка при отправке сообщения в Telegram: {e}")
         raise
 
-async def main():
+async def task():
     try:
         data = fetch_products()
         goods = data.get('data', {}).get('listGoods', [])
@@ -81,6 +75,12 @@ async def main():
         await send_telegram_message(message)
     except Exception as e:
         logging.error(f"Произошла ошибка: {e}")
+
+async def main():
+    while True:
+        await task()
+        logging.info("Ожидание 4 часа до следующего запуска...")
+        await asyncio.sleep(4 * 60 * 60)  # 4 часа в секундах
 
 if __name__ == "__main__":
     asyncio.run(main())
