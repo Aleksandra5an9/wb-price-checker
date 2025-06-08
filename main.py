@@ -1,8 +1,10 @@
 import os
-import requests
-import telegram
-import asyncio
 import logging
+import asyncio
+from flask import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
+import telegram
+import requests
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
@@ -14,8 +16,8 @@ if not API_KEY_WB:
     raise ValueError("API_KEY не задана в переменных окружения")
 if not TELEGRAM_TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN не задан")
-if not CHAT_IDS:
-    raise ValueError("TELEGRAM_CHAT_ID не задан")
+if not CHAT_IDS or CHAT_IDS == [""]:
+    raise ValueError("TELEGRAM_CHAT_IDS не задан")
 
 URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
 HEADERS = {
@@ -74,13 +76,25 @@ async def task():
         logging.info(f"Формируем сообщение для Telegram:\n{message}")
         await send_telegram_message(message)
     except Exception as e:
-        logging.error(f"Произошла ошибка: {e}")
+        logging.error(f"Произошла ошибка в задаче: {e}")
 
-async def main():
-    while True:
-        await task()
-        logging.info("Ожидание 4 часа до следующего запуска...")
-        await asyncio.sleep(4 * 60 * 60)  # 4 часа в секундах
+def run_async_task():
+    # Запускаем асинхронную функцию из синхронного контекста планировщика
+    asyncio.run(task())
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Бот запущен и работает."
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    scheduler = BackgroundScheduler()
+    # Запуск задачи сразу при старте
+    run_async_task()
+    # Запуск задачи каждые 4 часа
+    scheduler.add_job(run_async_task, "interval", hours=4)
+    scheduler.start()
+    
+    # Запуск Flask
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
