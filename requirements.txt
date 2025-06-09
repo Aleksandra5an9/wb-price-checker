@@ -1,4 +1,7 @@
 requests
+python-dotenv
+pyTelegramBotAPI
+selenium
+python-telegram-bot==20.7
 Flask
 apscheduler
-python-telegram-bot[asyncio]
