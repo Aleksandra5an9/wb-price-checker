@@ -1,35 +1,35 @@
-from flask import Flask
-from apscheduler.schedulers.background import BackgroundScheduler
-import asyncio
 import os
-import telegram
 import requests
+import telegram
+import asyncio
 import logging
 
-# Настройка логов
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
-app = Flask(__name__)
-
-# Переменные окружения
 API_KEY_WB = os.getenv("API_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_IDS = os.getenv("TELEGRAM_CHAT_IDS", "").split(",")
 
-# Проверка переменных
-if not API_KEY_WB or not TELEGRAM_TOKEN or not CHAT_IDS:
-    raise ValueError("Не заданы необходимые переменные окружения")
+if not API_KEY_WB:
+    raise ValueError("API_KEY не задана в переменных окружения")
+if not TELEGRAM_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN не задан")
+if not CHAT_IDS:
+    raise ValueError("TELEGRAM_CHAT_IDS не заданы")
 
-# Заголовки запроса к WB
-HEADERS = {"Authorization": f"Bearer {API_KEY_WB}"}
 URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
+HEADERS = {
+    "Authorization": f"Bearer {API_KEY_WB}"
+}
 
-# Функции
 def fetch_products(limit=20, offset=0):
     params = {'limit': limit, 'offset': offset}
+    logging.info(f"Запрос к API: {URL} с параметрами {params}")
     response = requests.get(URL, headers=HEADERS, params=params)
+    logging.info(f"Ответ API: статус {response.status_code}")
     response.raise_for_status()
     data = response.json()
+    logging.info(f"Получено товаров: {len(data.get('data', {}).get('listGoods', []))}")
     return data
 
 def escape_markdown(text: str) -> str:
@@ -44,44 +44,37 @@ def format_message(products):
         vendor_code = product.get('vendorCode', 'N/A')
         sizes = product.get('sizes', [])
         discounted_price = "N/A"
-        if sizes and sizes[0].get('discountedPrice'):
-            discounted_price = sizes[0]['discountedPrice']
+        if sizes:
+            first_size = sizes[0]
+            if first_size and first_size.get('discountedPrice') is not None:
+                discounted_price = first_size['discountedPrice']
         line = escape_markdown(f"{vendor_code} - {discounted_price} RUB")
         lines.append(line)
     return "\n".join(lines)
 
 async def send_telegram_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    async with bot:
-        for chat_id in CHAT_IDS:
-            await bot.send_message(chat_id=chat_id.strip(), text=text, parse_mode='MarkdownV2')
+    try:
+        async with bot:
+            for chat_id in CHAT_IDS:
+                await bot.send_message(chat_id=chat_id.strip(), text=text, parse_mode='MarkdownV2')
+                logging.info(f"Сообщение успешно отправлено в Telegram: {chat_id.strip()}")
+    except telegram.error.TelegramError as e:
+        logging.error(f"Ошибка при отправке сообщения в Telegram: {e}")
+        raise
 
-def run_async_task():
-    logging.info("Запуск фоновой задачи...")
-    asyncio.run(task())
-
-async def task():
+async def main():
     try:
         data = fetch_products()
         goods = data.get('data', {}).get('listGoods', [])
         if not goods:
-            logging.warning("Нет товаров")
+            logging.warning("Нет данных о товарах для отправки")
             return
         message = format_message(goods)
-        logging.info(f"Отправка сообщения:\n{message}")
+        logging.info(f"Формируем сообщение для Telegram:\n{message}")
         await send_telegram_message(message)
     except Exception as e:
-        logging.error(f"Ошибка в задаче: {e}")
-
-# Запуск планировщика
-scheduler = BackgroundScheduler()
-scheduler.add_job(run_async_task, 'interval', hours=4)
-scheduler.start()
-
-# Flask эндпоинт (для Render ping)
-@app.route("/")
-def home():
-    return "Бот работает"
+        logging.error(f"Произошла ошибка: {e}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    asyncio.run(main())
