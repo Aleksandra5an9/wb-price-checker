@@ -3,6 +3,7 @@ import requests
 import telegram
 import asyncio
 import logging
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
@@ -21,6 +22,15 @@ URL = "https://discounts-prices-api.wildberries.ru/api/v2/list/goods/filter"
 HEADERS = {
     "Authorization": f"Bearer {API_KEY_WB}"
 }
+
+def is_even_hour():
+    # Используй UTC
+    current_hour = datetime.utcnow().hour
+
+    # Если хочешь по Стамбулу (UTC+3), раскомментируй строчку ниже:
+    # current_hour = (datetime.utcnow() + timedelta(hours=3)).hour
+
+    return current_hour % 2 == 0
 
 def fetch_products(limit=20, offset=0):
     params = {'limit': limit, 'offset': offset}
@@ -64,6 +74,10 @@ async def send_telegram_message(text):
         raise
 
 async def main():
+    if not is_even_hour():
+        logging.info("Пропуск отправки: нечётный час")
+        return
+
     try:
         data = fetch_products()
         goods = data.get('data', {}).get('listGoods', [])
