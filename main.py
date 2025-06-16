@@ -24,12 +24,11 @@ HEADERS = {
 }
 
 def is_even_hour():
-    # Используй UTC
-    current_hour = datetime.utcnow().hour
-
-    # Если хочешь по Стамбулу (UTC+3), раскомментируй строчку ниже:
+    # Если хочешь учитывать Стамбул (UTC+3), раскомментируй строку ниже
     # current_hour = (datetime.utcnow() + timedelta(hours=3)).hour
 
+    current_hour = datetime.utcnow().hour
+    logging.info(f"[DEBUG] Текущее UTC время: {datetime.utcnow()}, Час: {current_hour}")
     return current_hour % 2 == 0
 
 def fetch_products(limit=20, offset=0):
