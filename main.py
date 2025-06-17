@@ -24,11 +24,13 @@ HEADERS = {
 }
 
 def is_even_hour():
-    # Приводим UTC ко времени Стамбула (+3 часа)
+    # Время в Стамбуле (UTC+3)
     istanbul_time = datetime.utcnow() + timedelta(hours=3)
     current_hour = istanbul_time.hour
 
-    logging.info(f"[DEBUG] Текущее стамбульское время: {istanbul_time}, Час: {current_hour}")
+    logging.info(f"[DEBUG] Текущее стамбульское время: {istanbul_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"[DEBUG] Час (стамбульский): {current_hour}")
+    logging.info(f"[DEBUG] Чётный час? {current_hour} % 2 == 0 → {current_hour % 2 == 0}")
 
     return current_hour % 2 == 0
 
